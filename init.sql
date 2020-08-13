@@ -171,6 +171,175 @@ WHERE genre_id IN (
 AND composer IS null;
 
 
----------- Practice Updating Rows ----------
+---------- Group By ----------
 
 -- 1.
+SELECT COUNT(g.name), g.name 
+FROM track t
+JOIN genre g 
+ON g.genre_id = t.genre_id
+GROUP BY g.name; 
+
+-- Solution code below was slightly different, but same results (I guess the splat is better practice).
+SELECT COUNT(*), g.name
+FROM track t
+JOIN genre g 
+ON t.genre_id = g.genre_id
+GROUP BY g.name;
+
+
+-- 2.
+SELECT COUNT(*), g.name
+FROM track t
+JOIN genre g
+ON t.genre_id = g.genre_id
+WHERE g.name = 'Pop' AND g.name = 'Rock'
+GROUP BY g.name;
+
+
+-- 3.
+SELECT a.name, COUNT(*)
+FROM artist a
+JOIN album al
+ON a.artist_id = al.artist_id
+GROUP BY a.name;
+
+
+---------- Use Distinct ----------
+
+-- 1.
+SELECT DISTINCT composer
+FROM track;
+
+
+-- 2.
+SELECT DISTINCT billing_postal_code
+FROM invoice;
+
+
+-- 3.
+SELECT DISTINCT company
+FROM customer;
+
+
+---------- Delete Rows ----------
+
+-- 2.
+DELETE FROM practice_table
+WHERE type = 'bronze';
+
+
+-- 3.
+DELETE FROM practice_table
+WHERE type = 'silver';
+
+-- 4.
+DELETE FROM practice_table
+WHERE value = 150;
+
+
+---------- eCommerce Simulation ----------
+-- CREATE TABLES: users, products, orders
+
+-- users: user_id, name, email
+-- products: product_id, name, price
+-- orders: order_id, product_id
+
+CREATE TABLE users(
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(200)
+);
+
+INSERT INTO users
+(name, email)
+VALUES
+('Lucille Ball', 'ilovelucy@lucy.com'),
+('Andy Griffith', 'bestsheriff@mayberry.com'),
+('Henry Winkler', 'thefonz@leather.com');
+
+
+CREATE TABLE products(
+    product_id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    price FLOAT(2)
+);
+
+INSERT INTO products
+(name, price)
+VALUES
+('Chocolates', 32.50),
+('Holster', 54.95),
+('Leather Jacket', 150.00);
+
+
+CREATE TABLE orders(
+    order_id SERIAL PRIMARY KEY,
+    quantity INT,
+    product_id INT REFERENCES products (product_id)
+);
+
+INSERT INTO orders
+(quantity, product_id)
+VALUES
+(5, 1),
+(2, 2),
+(1, 3),
+(3, 1);
+
+-- RUN QUERIES
+
+-- Get all products for the first order.
+SELECT * FROM orders
+WHERE order_id = 1;
+
+-- Get all orders.
+SELECT * FROM orders;
+
+-- Get total cost of an order.
+SELECT SUM(p.price * o.quantity) 
+FROM orders o
+JOIN products p
+ON o.product_id = p.product_id
+WHERE order_id = 1;
+
+-- Add foreign key reference from orders to users.
+ALTER TABLE orders
+ADD user_id INT REFERENCES users (user_id);
+
+-- Update orders table to link a user to each order.
+UPDATE orders
+SET user_id = 1
+WHERE order_id = 1;
+
+UPDATE orders
+SET user_id = 2
+WHERE order_id = 2;
+
+UPDATE orders
+SET user_id = 3
+WHERE order_id = 3 OR order_id = 4;
+
+-- Run more queries.
+
+-- Get all orders for a user. (The Fonz!)
+SELECT * FROM orders o
+JOIN users u
+ON o.user_id = u.user_id
+WHERE user_id = 3;
+
+-- Get how many orders each user has.
+SELECT COUNT(*), u.name
+FROM orders o
+JOIN users u
+ON o.user_id = u.user_id
+GROUP BY u.name;
+
+SELECT COUNT(*), u.name, o.price
+FROM orders o
+JOIN users u
+ON o.user_id = u.user_id
+GROUP BY u.name;
+
+
+SELECT SUM(o.quantity * p.price)
